@@ -1,3 +1,6 @@
+-- Mon 30.03- 05.04
+
+
 create database hr_system;
 
 
@@ -18,7 +21,6 @@ set search_path to app;
 
 insert into app.users (email,name,surname)
 values ('development.user@iasismed.eu','Development', 'User');
-
 
 
 --TRUNCATE TABLE app.users RESTART IDENTITY;
@@ -43,7 +45,6 @@ insert into app.projects (user_id,title,project_description)
 Values
 (1,'Clients Project','Fix Basic CRM Module'),
 (1,'Medication Project', 'Central Stock remaining to be done');
-
 
 
 --First Join Query
@@ -243,3 +244,38 @@ WHERE EXISTS (
     WHERE p.user_id = u.id
       AND p.budget <= 1000
 );
+
+
+
+
+-- Mon 06.04
+
+-- Exercise 2 
+
+select * 
+from users u 
+where exists (
+select 1
+from projects p where p.user_id=u.id
+and p.budget>500
+group by p.user_id
+having count(*)>=2
+);
+
+
+
+-- Exercise 3 
+
+
+
+select u.id,u.name,u.surname, sum(p.budget)
+from users u 
+join projects p on u.id=p.user_id 
+group by  u.id 
+having sum(p.budget)<2000
+
+
+
+--Exercise 4 
+
+
