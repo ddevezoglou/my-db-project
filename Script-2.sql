@@ -277,5 +277,17 @@ having sum(p.budget)<2000
 
 
 --Exercise 4 
+select *
+from users u join projects p 
+on u.id=p.user_id 
+where p.budget = (select max(p.budget ) from projects p ) 
 
 
+-- Exercise 5 
+
+select u.name,u.surname, count(*) as "Projects"
+from users u join projects p on u.id = p.user_id 
+group by u.name,u.surname 
+having count(*)>(
+select avg(total_projects) from (select user_id,count(*) as total_projects 
+from projects group by user_id))
