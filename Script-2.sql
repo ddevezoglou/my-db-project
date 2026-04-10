@@ -245,11 +245,6 @@ WHERE EXISTS (
       AND p.budget <= 1000
 );
 
-
-
-
--- Mon 06.04
-
 -- Exercise 2 
 
 select * 
@@ -291,3 +286,154 @@ group by u.name,u.surname
 having count(*)>(
 select avg(total_projects) from (select user_id,count(*) as total_projects 
 from projects group by user_id))
+
+
+
+
+-- Exercise 6 
+
+select u.id,u.name,u.surname,count(p.id),sum(p.budget)
+from users u join projects p
+on u.id=p.user_id 
+group by u.id,u.name,u.surname 
+having count(p.id)>2 and sum(p.budget)>3000
+
+
+-- Exercise 7 
+
+
+select u.id,u.name,u.surname
+from users u 
+where exists (select 1 from projects p where p.user_id=u.id
+and  p.budget>(
+select avg(p.budget)
+from projects p
+)
+);
+
+
+
+
+--Exercice 8
+select 
+    u.id,
+    u.name,
+    u.surname,
+    p.title,
+    p.budget
+from users u
+join projects p on u.id = p.user_id
+where p.budget = (
+    select max(p2.budget)
+    from projects p2
+    where p2.user_id = u.id
+);
+
+
+
+
+-- Exercise 9 
+select u.id,u.name,u.surname
+from users u 
+where not exists (select 1 from projects p where u.id=p.user_id
+and p.budget <500)
+
+
+--Exercise 10 
+select u.id,u.name,u.surname, round(avg(p.budget),2)
+from users u join projects p on  u.id=p.user_id 
+group by u.id,u.name,u.surname 
+having avg(p.budget)>(select avg(p2.budget) from projects p2)
+
+
+--Exercise 11
+ select u.id, u.name,u.surname,count(*)
+ from users u join projects p 
+ on u.id = p.user_id 
+ group by u.id,u.name,u.surname 
+ having count(*)>=2
+ and max(p.budget)<1000
+ 
+ 
+--Exercise 12 
+ select u.id,u.name,u.surname,count(*)
+ from users u join projects p on u.id=p.user_id 
+ where exists (select 1 from projects p2 where p2.user_id=u.id and p2.budget>1000)
+ group by u.id,u.name,u.surname
+ having count(*)>=2
+
+ 
+ 
+-- Exercice 13
+ select u.id,u.name,u.surname,round(avg(p.budget),2)
+ from users u join projects p
+ on u.id=p.user_id 
+ where  not exists (select 1 from projects p3 where p3.user_id=u.id  and p3.budget<500)
+ group by u.id,u.name,u.surname
+ having avg(p.budget) >800
+ 
+ 
+ 
+ --Exercise 14
+ select u.id,u.name,u.surname,sum(p.budget) as total_budget, count(*) as total_projects 
+ from users u join projects p
+ on u.id=p.user_id 
+ where exists (select 1 from projects p2 where p2.user_id =u.id and p2.budget>1000)
+ and not exists (select 1 from projects p3 where p3.user_id=u.id and p3.budget<300)
+ group by u.id,u.name,u.surname 
+ having count(*)>=2
+ and sum(p.budget ) between 2000 and 5000
+
+ 
+ 
+ -- Exercise 1 
+ 
+ select distinct u.id,u.name,u.surname
+ from users u  join projects p on u.id=p.user_id 
+ where p.budget >500
+ 
+ 
+ -- Exercise 2 
+ select u.id,u.name,u.surname
+ from users u join projects p on u.id=p.user_id
+ group by u.id ,u.name,u.surname 
+ having count(*)>2
+
+ 
+ 
+ --Exercise 3
+  select u.id,u.name,u.surname, sum(p.budget) as total_budget
+ from users u join projects p on u.id=p.user_id
+ group by u.id ,u.name,u.surname 
+ having sum(p.budget)>2000
+ 
+ 
+ 
+ -- Exercise 4
+ select q.id,q.name,q.surname,t.max_budget 
+ from
+ (select max(p1.budget) as max_budget
+ from projects p1 )  t join
+(select u.id,u.name,u.surname, sum(p.budget) as users_budget
+ from users u join projects p on u.id=p.user_id
+ group by u.id ,u.name,u.surname ) q
+ on t.max_budget=q.users_budget
+ 
+  
+ 
+ -- Exercise 5
+select * from(
+ select *, row_number() over(partition by p.user_id order by p.budget desc) as rn 
+from projects p )
+where rn=1;
+
+-- Exercise 6
+select 
+    p.user_id,
+    p.created_at,
+    p.budget,
+    lag(p.budget) over (
+        partition by p.user_id 
+        order by p.created_at
+    ) as previous_budget
+from projects p;
