@@ -437,3 +437,181 @@ select
         order by p.created_at
     ) as previous_budget
 from projects p;
+
+
+
+
+-- Exerice 1
+
+select p.id, p.user_id, p.budget, sum(p.budget) over (partition by user_id) as total_user_budget
+from projects p 
+
+
+-- Exercise 2
+
+select u.id,u.name,u.surname,sum(p.budget) as total_budget ,rank() over (order by sum(p.budget) desc)
+from users u join projects p 
+on u.id=p.user_id
+group by u.id,u.name,u.surname
+
+
+-- Exercise 3
+select id,name,surname,title,budget from
+(
+select u.id,u.name,u.surname,p.title,p.budget, row_number() over (partition by u.id order by p.budget desc) as rn
+from users u join projects p 
+on u.id=p.user_id 
+) where rn=1
+
+
+-- Exercise 4
+
+select u.id,p.created_at,p.budget,sum(p.budget) over(partition by u.id order by p.id ) as running_total
+from users u join projects p 
+on u.id=p.user_id
+
+
+-- Exercise 5
+select * from (
+select u.id,u.name,u.surname,sum(p.budget) as total_budget, rank() over (order by sum(p.budget) desc ) as rnk
+from users u join projects p 
+on u.id=p.user_id 
+group by u.id,u.name,u.surname ) 
+where rnk=1
+
+--Exercise 6 
+select *
+from (
+    select 
+        p.*,
+        row_number() over (
+            partition by p.user_id
+            order by p.created_at desc
+        ) as rn
+    from projects p
+) t
+where rn = 1;
+
+
+--Exercise 7 
+select *
+from (
+    select 
+        p.*,
+        row_number() over (
+            partition by p.user_id, p.title
+            order by p.created_at desc
+        ) as rn
+    from projects p
+) t
+where rn = 1;
+
+
+
+-- Exercise 8 
+select 
+    p.user_id,
+    p.created_at,
+    p.budget,
+    lag(p.budget) over (
+        partition by p.user_id
+        order by p.created_at
+    ) as prev_budget,
+    p.budget - lag(p.budget) over (
+        partition by p.user_id
+        order by p.created_at
+    ) as diff
+from projects p;
+
+
+--Exercise 9 
+select *
+from ( select p.user_id,p.title,row_number() over(partition by p.user_id order by p.budget desc) as rn 
+from projects p 
+) t 
+where  rn<=2;
+
+
+--Exercise 10
+select user_id, title, created_at
+from (
+    select 
+        p.user_id,
+        p.title,
+        p.created_at,
+        row_number() over (
+            partition by p.user_id 
+            order by p.created_at desc
+        ) as rn
+    from projects p
+) t
+where rn = 1;
+
+
+--Exercise 11
+ select t.title, u.name, u.surname
+from (
+    select 
+        p.user_id,
+        p.title,
+        row_number() over (
+            partition by p.user_id, p.title 
+            order by p.created_at desc
+        ) as rn
+    from projects p 
+) t 
+join users u on t.user_id = u.id
+where rn = 1;
+
+
+--Exercise 12
+select u.name,u.surname,p.budget,p.title, rank() over(partition by u.id order by p.budget desc) as rnk 
+from users u join projects p on u.id=p.user_id
+
+
+-- Exericse 13
+
+select u.id,u.name,u.surname,count(t.user_id) as total_projects, sum(t.cnt) as "budget>500"
+from
+(select p1.user_id ,
+case when p1.budget>500 then 1 else 0 
+end as cnt from projects p1) t 
+join users u  
+on u.id=t.user_id
+group by u.id,u.name,u.surname
+
+
+
+
+
+--Exercise 14
+select t.* 
+from (select u.name, rank() over (partition by p.user_id order by p.budget desc) as rnk,
+p.user_id,p.title,p.budget, 
+row_number() over (partition by p.user_id order by p.created_at desc) as rn
+from projects p 
+join users u on p.user_id=u.id)t
+where rn=1 and rnk<=2
+
+
+
+-- Exercise 15 
+with cte_1 as (
+select u.id,u.name,u.surname, sum(p.budget) as total_budget
+from users u join projects p on u.id=p.user_id
+group by u.id,u.name,u.surname),
+cte_2 as (select name,surname,total_budget ,rank() over (order by total_budget desc) as rnk
+from cte_1
+)
+select * from cte_2 where rnk=1
+
+
+
+
+
+
+
+
+
+
+
