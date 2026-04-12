@@ -607,11 +607,64 @@ select * from cte_2 where rnk=1
 
 
 
+-- Exercise 1
+select u.id,u.name,u.surname
+from users u left join projects p 
+on u.id=p.user_id
+where p.user_id is null
+
+
+-- Exercise 2 
+select u.id,u.name,u.surname
+from users u
+where not exists (select 1 from projects p1 where p1.user_id=u.id and p1.budget>1000)
+
+
+-- Exercise 3
+select distinct p.budget 
+from projects p 
+
+-- Exericse 4 
+select u.id,u.name,u.surname,coalesce(sum(p.budget),0) as total_budget
+from users u left join projects p on p.user_id =u.id 
+group by u.id,u.name,u.surname
+order by 4 desc
+
+
+--Exercise 5
+select u.name 
+from users u 
+union all
+select p.title 
+from projects p 
+
+
+-- Exercise 6
+select u.name 
+from users u 
+intersect
+select p.title 
+from projects p 
 
 
 
+--Exercise 7 
+select u.name 
+from users u 
+except
+select p.title 
+from projects p 
 
 
+-- Exercise 8 
+select u.name 
+from users u 
+where not exists (select 1 from projects p where u.name=p.title) 
+
+
+-- Exericse 9 
+select p.title,p.budget from projects p 
+where p.budget != (select max(p1.budget) from projects p1)
 
 
 
