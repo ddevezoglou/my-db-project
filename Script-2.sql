@@ -667,4 +667,142 @@ select p.title,p.budget from projects p
 where p.budget != (select max(p1.budget) from projects p1)
 
 
+-- Exercise 1
+select u.id,u.name, count(p.user_id) as total_projects ,sum(p.budget) as total_budget
+from users u join projects p 
+on u.id=p.user_id 
+group by u.id,u.name
+having count(p.user_id)>=2 and sum(p.budget)>1000
 
+
+
+-- Exercise 2
+select u.id,u.name 
+from users u 
+where exists (select 1 from projects p1 where p1.user_id=u.id)
+and not exists (select 1 from projects p where p.user_id=u.id and p.budget >800)
+
+
+-- Exercise 3
+select user_id,name,title,budget from (
+select p.user_id,u.name,p.title,p.budget,row_number() over(partition by u.id order by p.budget desc) as rn
+from users u join projects p on u.id=p.user_id) t
+where rn=1
+
+
+--Exercise 4 
+select user_id,name,title,budget from (
+select p.user_id,u.name,p.title,p.budget,row_number() over(partition by u.id order by p.budget desc) as rn
+from users u join projects p on u.id=p.user_id) t
+where rn=2
+and budget>500
+
+
+--Exercise 5 
+select p.user_id,u.name,max(p.budget) as max_budget,avg(p.budget) as avg_budget
+from users u join projects p 
+on u.id=p.user_id 
+group by p.user_id,u.name
+having count(p.user_id)>=3 and max(p.budget)>1000 and avg(p.budget)<800
+
+
+-- Exercise 1 
+select u.id,u.name 
+from users u 
+where exists (select 1 from projects p where p.user_id =u.id)
+and not exists (select 1 from projects p1 where p1.user_id=u.id and p1.budget <300)
+
+
+
+
+-- Exercise 2 
+with cte_1 as 
+(select p.user_id,u.name,p.title,p.budget,
+row_number() over (partition by u.id order by p.budget) as rn
+from users u join projects p
+on u.id=p.user_id )
+select user_id,name,title,budget from cte_1 where rn=1
+
+
+
+--Exercise 3 
+with cte_1 as (
+select u.id,u.name
+from users u 
+where exists (select 1 from projects p1 where p1.user_id=u.id and p1.budget >1000 ))
+select cte_1.id,cte_1.name
+from cte_1 
+join projects p 
+on cte_1.id=p.user_id 
+group by cte_1.id,cte_1.name 
+having count(*)>=2 
+
+
+--Exercise 4
+select p.budget
+from projects p
+group by p.budget 
+having count(*)>1
+
+
+--Exercise 5 
+with cte_1 as (
+select p.user_id,u.name,p.title,p.budget,row_number() over(partition by p.user_id order by p.budget desc) as rn,
+count(p.title) over(partition by p.user_id ) as cnt 
+from users u join projects p 
+on u.id=p.user_id 
+)
+select user_id,name,title,budget from cte_1
+where rn=3 and cnt>=3
+
+
+
+-- Exercise 1 
+select u.name,u.id,p.title,p.budget,
+lag(p.budget) over(partition by u.id order by p.budget ),
+p.budget - lag(p.budget) over(partition by u.id order by p.budget ) as diff
+from projects p join users u on p.user_id = u.id
+
+
+
+--Exercise 2
+select u.name,u.id,p.title,p.budget,
+sum(p.budget) over(partition by u.id order by p.budget)
+from projects p join users u on p.user_id = u.id
+
+
+
+
+-- Exercise 3
+SELECT 
+  u.name,
+  u.id,
+  p.title,
+  p.budget,
+  AVG(p.budget) OVER (
+    PARTITION BY u.id
+    ORDER BY p.created_at
+    ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+  ) AS moving_avg
+FROM projects p
+JOIN users u ON p.user_id = u.id;
+
+
+
+-- Exercise 4
+WITH cte AS (
+  SELECT 
+    u.name,
+    u.id,
+    p.title,
+    p.budget,
+    LAG(p.budget) OVER (
+      PARTITION BY u.id
+      ORDER BY p.created_at
+    ) AS prev_budget
+  FROM projects p
+  JOIN users u ON p.user_id = u.id
+)
+SELECT *
+FROM cte
+WHERE budget > prev_budget;
